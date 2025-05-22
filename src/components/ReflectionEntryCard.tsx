@@ -1,3 +1,4 @@
+
 import type { ReflectionEntry } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -11,6 +12,16 @@ interface ReflectionEntryCardProps {
 
 export function ReflectionEntryCard({ entry }: ReflectionEntryCardProps) {
   const formattedTimestamp = format(parseISO(entry.timestamp), "MMMM d, yyyy 'at' h:mm a");
+
+  // Provide default structure for aiAssistance if it's missing or its properties are missing.
+  // This makes the component resilient to older data from local storage.
+  const aiAssistance = entry.aiAssistance || {
+    identifiedEmotionalStates: [],
+    personalizedMessages: [],
+    affirmation: "",
+  };
+
+  const { identifiedEmotionalStates, personalizedMessages, affirmation } = aiAssistance;
 
   return (
     <Card className="mb-6 shadow-lg overflow-hidden bg-card/90 backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
@@ -30,7 +41,7 @@ export function ReflectionEntryCard({ entry }: ReflectionEntryCardProps) {
           <p className="text-foreground leading-relaxed whitespace-pre-wrap">{entry.reflectionText}</p>
         </div>
         
-        {entry.aiAssistance.identifiedEmotionalStates && entry.aiAssistance.identifiedEmotionalStates.length > 0 && (
+        {identifiedEmotionalStates && identifiedEmotionalStates.length > 0 && (
           <>
             <Separator className="my-4" />
             <div>
@@ -39,7 +50,7 @@ export function ReflectionEntryCard({ entry }: ReflectionEntryCardProps) {
                 Emotional Landscape
               </h3>
               <div className="flex flex-wrap gap-2">
-                {entry.aiAssistance.identifiedEmotionalStates.map((state, index) => (
+                {identifiedEmotionalStates.map((state, index) => (
                   <Badge key={index} variant="secondary" className="py-1 px-2.5">
                     <span className="font-medium">{state.theme}:</span>&nbsp;{state.description}
                   </Badge>
@@ -49,7 +60,7 @@ export function ReflectionEntryCard({ entry }: ReflectionEntryCardProps) {
           </>
         )}
 
-        {entry.aiAssistance.personalizedMessages && entry.aiAssistance.personalizedMessages.length > 0 && (
+        {personalizedMessages && personalizedMessages.length > 0 && (
           <>
             <Separator className="my-4" />
             <div>
@@ -58,7 +69,7 @@ export function ReflectionEntryCard({ entry }: ReflectionEntryCardProps) {
                 Personalized Gratitude
               </h3>
               <div className="space-y-3">
-                {entry.aiAssistance.personalizedMessages.map((msg, index) => (
+                {personalizedMessages.map((msg, index) => (
                   <div key={index} className="p-3 bg-muted/30 rounded-md border border-border shadow-sm">
                     <p className="font-semibold text-accent-foreground mb-1">{msg.title}</p>
                     <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{msg.message}</p>
@@ -69,7 +80,7 @@ export function ReflectionEntryCard({ entry }: ReflectionEntryCardProps) {
           </>
         )}
         
-        {entry.aiAssistance.affirmation && (
+        {affirmation && (
           <>
             <Separator className="my-4" />
             <div>
@@ -78,7 +89,7 @@ export function ReflectionEntryCard({ entry }: ReflectionEntryCardProps) {
                 Affirmation for Alignment
               </h3>
               <blockquote className="italic text-foreground/90 leading-relaxed border-l-4 border-accent pl-3 py-1 bg-muted/20 rounded-r-md">
-                {entry.aiAssistance.affirmation}
+                {affirmation}
               </blockquote>
             </div>
           </>
