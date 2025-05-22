@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview AI agent that generates personalized gratitude messages, identifies emotional states, and provides affirmations based on user's daily reflections.
@@ -27,7 +28,7 @@ const EmotionalStateSchema = z.object({
 
 const PersonalizedMessageSchema = z.object({
   title: z.string().describe("An uplifting and empathetic title for the gratitude message. Examples: 'Finding Strength in Solitude', 'Acknowledging Your Body's Wisdom', 'Gratitude for Career Lessons'. Should be a short phrase."),
-  message: z.string().describe("The core gratitude message, crafted to be supportive, positive, and constructive, focusing on a specific point."),
+  message: z.string().describe("The core gratitude message. It should reframe a specific challenging aspect from the user's reflection into a statement of gratitude, often starting with 'Thank You for...' or expressing appreciation for a lesson learned or a strength found. The message should be supportive, positive, and constructive."),
 });
 
 const GenerateGratitudeMessagesOutputSchema = z.object({
@@ -55,7 +56,7 @@ const prompt = ai.definePrompt({
   output: {schema: GenerateGratitudeMessagesOutputSchema},
   prompt: `You are an empathetic AI assistant. Based on the user's daily reflection, your goal is to:
 1. Identify 2-3 key emotional states.
-2. Generate 2-3 personalized gratitude messages to help shift the user to a positive mindset, with each message addressing a specific aspect.
+2. Generate 2-3 personalized gratitude messages to help shift the user to a positive mindset. Each message should address a specific aspect of their reflection by reframing it into a statement of gratitude (e.g., starting with "Thank You for..." or similar phrasing that expresses appreciation for lessons or strengths found).
 3. Provide a single, overall affirmation.
 
 Strictly adhere to the output schema provided. Ensure each part of the schema is populated thoughtfully.
