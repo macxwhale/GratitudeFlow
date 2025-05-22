@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Enable server actions
+  serverActions: true,
 };
 
 export default nextConfig;
