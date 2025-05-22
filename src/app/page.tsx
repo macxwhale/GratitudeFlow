@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { ReflectionEntry } from '@/types';
 import { generateGratitudeMessages } from '@/ai/flows/generate-gratitude-messages';
-import type { GenerateGratitudeMessagesInput } from '@/ai/flows/generate-gratitude-messages';
+import type { GenerateGratitudeMessagesInput, GenerateGratitudeMessagesOutput } from '@/ai/flows/generate-gratitude-messages';
 import { GratitudeFlowHeader } from '@/components/GratitudeFlowHeader';
 import { ReflectionInputForm } from '@/components/ReflectionInputForm';
 import { ReflectionLog } from '@/components/ReflectionLog';
@@ -30,14 +30,13 @@ export default function GratitudeFlowPage() {
     setError(null);
     try {
       const aiInput: GenerateGratitudeMessagesInput = { dailyReflection: reflectionText };
-      // Explicitly type the promise if needed, though await should infer it
-      const aiOutput = await generateGratitudeMessages(aiInput);
+      const aiOutput: GenerateGratitudeMessagesOutput = await generateGratitudeMessages(aiInput);
 
       const newEntry: ReflectionEntry = {
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         reflectionText,
-        gratitudeMessage: aiOutput.gratitudeMessage,
+        aiAssistance: aiOutput, // Updated to store the structured output
       };
       setReflections(prevEntries => [newEntry, ...prevEntries]);
     } catch (e: any) {
