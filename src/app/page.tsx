@@ -16,6 +16,8 @@ import Link from 'next/link';
 import { StreakDisplay } from '@/components/StreakDisplay';
 import { ReflectionCalendar } from '@/components/ReflectionCalendar';
 import { getUniqueReflectionDates, calculateStreaks, convertDateStringsToDateObjects } from '@/lib/dateUtils';
+import { AdSlot } from '@/components/ads/AdSlot'; // For AdSense
+import { AdMobBannerPlaceholder } from '@/components/ads/AdMobBannerPlaceholder'; // For AdMob placeholder
 
 const MAX_RECENT_ENTRIES_ON_MAIN_PAGE = 3;
 
@@ -65,6 +67,11 @@ export default function GratitudeFlowPage() {
   }, [reflections]);
 
 
+  // IMPORTANT: Replace with your actual AdSense/AdMob IDs
+  const adsenseAdSlotId = process.env.NEXT_PUBLIC_ADSENSE_AD_SLOT_ID_PAGE_BOTTOM || "YOUR_ADSENSE_AD_SLOT_ID_HERE";
+  const admobAdUnitId = process.env.NEXT_PUBLIC_ADMOB_BANNER_AD_UNIT_ID || "YOUR_ADMOB_BANNER_AD_UNIT_ID_HERE";
+
+
   return (
     <div className="min-h-screen flex flex-col items-center p-4 md:p-8 bg-gradient-to-br from-background to-secondary/30">
       <div className="w-full max-w-2xl space-y-8">
@@ -88,6 +95,21 @@ export default function GratitudeFlowPage() {
         )}
         
         <ReflectionCalendar reflectionDates={calendarDates} />
+
+        {/* AdSense Ad Slot for Web */}
+        <div className="my-6">
+          <p className="text-center text-xs text-muted-foreground mb-1">Advertisement (Web - AdSense)</p>
+          <AdSlot adSlotId={adsenseAdSlotId} />
+        </div>
+
+        {/* AdMob Banner Placeholder for when packaged as Mobile App */}
+        {/* This placeholder will only attempt to call a native plugin if one is detected. */}
+        {/* It won't show ads in a regular web browser. */}
+        <div className="my-6">
+           <p className="text-center text-xs text-muted-foreground mb-1">Advertisement (Mobile App - AdMob Placeholder)</p>
+          <AdMobBannerPlaceholder adUnitId={admobAdUnitId} />
+        </div>
+
 
         <ReflectionLog entries={recentReflections} />
 
