@@ -7,10 +7,10 @@ import { ReflectionLog } from '@/components/ReflectionLog';
 import { getReflectionsFromStorage } from '@/lib/localStorage';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Home, ArrowDownCircle } from 'lucide-react'; // Added ArrowDownCircle
+import { Home, ArrowDownCircle } from 'lucide-react';
 
-const ITEMS_TO_LOAD = 5; // Number of items to load each time
-const INITIAL_ITEMS = 5; // Number of items to display initially
+const ITEMS_TO_LOAD = 5;
+const INITIAL_ITEMS = 5;
 
 export default function HistoryPage() {
   const [allReflections, setAllReflections] = useState<ReflectionEntry[]>([]);
@@ -58,6 +58,14 @@ export default function HistoryPage() {
         </main>
 
         <footer className="mt-12 py-6 text-center text-muted-foreground text-sm">
+          <div className="mb-4">
+            <Button asChild variant="outline">
+              <Link href="/">
+                <Home className="mr-2 h-4 w-4" />
+                Back to Reflections
+              </Link>
+            </Button>
+          </div>
           <p>&copy; {new Date().getFullYear()} GratitudeFlow. Keep reflecting!</p>
         </footer>
       </div>
