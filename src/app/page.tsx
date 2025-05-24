@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,8 +10,11 @@ import { ReflectionInputForm } from '@/components/ReflectionInputForm';
 import { ReflectionLog } from '@/components/ReflectionLog';
 import { getReflectionsFromStorage, saveReflectionsToStorage } from '@/lib/localStorage';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal } from 'lucide-react';
+import { Terminal, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+
+const MAX_RECENT_ENTRIES_ON_MAIN_PAGE = 3;
 
 export default function GratitudeFlowPage() {
   const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
@@ -36,7 +40,7 @@ export default function GratitudeFlowPage() {
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
         reflectionText,
-        aiAssistance: aiOutput, // Updated to store the structured output
+        aiAssistance: aiOutput,
       };
       setReflections(prevEntries => [newEntry, ...prevEntries]);
     } catch (e: any) {
@@ -46,6 +50,8 @@ export default function GratitudeFlowPage() {
       setIsLoading(false);
     }
   };
+
+  const recentReflections = reflections.slice(0, MAX_RECENT_ENTRIES_ON_MAIN_PAGE);
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 md:p-8 bg-gradient-to-br from-background to-secondary/30">
@@ -68,7 +74,18 @@ export default function GratitudeFlowPage() {
             </Alert>
           )}
 
-          <ReflectionLog entries={reflections} />
+          <ReflectionLog entries={recentReflections} />
+
+          {reflections.length > MAX_RECENT_ENTRIES_ON_MAIN_PAGE && (
+            <div className="mt-6 text-center">
+              <Button asChild variant="outline" size="lg">
+                <Link href="/history">
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  View Full Gratitude Journey
+                </Link>
+              </Button>
+            </div>
+          )}
         </main>
 
         <footer className="mt-12 py-6 text-center text-muted-foreground text-sm">
