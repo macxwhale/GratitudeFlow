@@ -1,12 +1,14 @@
-import type { Metadata } from 'next';
-import { Geist } from 'next/font/google'; // Changed to single Geist import for sans-serif
-import './globals.css';
-import { Toaster } from "@/components/ui/toaster"; // Added Toaster
 
-const geistSans = Geist({ // Using Geist Sans
+import type { Metadata } from 'next';
+import { Geist } from 'next/font/google';
+import './globals.css';
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from '@/contexts/AuthContext'; // Import AuthProvider
+
+const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
-  display: 'swap', // Added for font display strategy
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -22,8 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} antialiased font-sans`}>
-        {children}
-        <Toaster />
+        <AuthProvider> {/* Wrap children with AuthProvider */}
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );
