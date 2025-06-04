@@ -37,15 +37,13 @@ export default function GratitudeFlowPage() {
     if (localReflections.length > 0) {
       console.log("Found local reflections, attempting migration...");
       await migrateLocalStorageToFirestore(userId, localReflections);
-      // Clear local storage after successful migration to prevent re-migration
-      // Be cautious with this in production; perhaps add a flag or more checks.
       saveReflectionsToLocalStorage([]); 
       console.log("Local storage cleared after migration attempt.");
     }
   }, []);
 
   useEffect(() => {
-    if (authLoading) return; // Wait for auth state to be determined
+    if (authLoading) return; 
 
     if (!user) {
       router.push('/login');
@@ -54,10 +52,17 @@ export default function GratitudeFlowPage() {
 
     const fetchData = async () => {
       setIsFetchingData(true);
-      await attemptMigration(user.uid); // Attempt migration on first load for logged-in user
-      const firestoreReflections = await getReflectionsFromFirestore(user.uid);
-      setReflections(firestoreReflections);
-      setIsFetchingData(false);
+      setError(null); // Clear previous errors
+      try {
+        await attemptMigration(user.uid); 
+        const firestoreReflections = await getReflectionsFromFirestore(user.uid);
+        setReflections(firestoreReflections);
+      } catch (err: any) {
+        console.error("Error fetching page data:", err);
+        setError(err.message || "Failed to load your journey. Please try refreshing the page.");
+      } finally {
+        setIsFetchingData(false);
+      }
     };
 
     fetchData();
@@ -78,7 +83,6 @@ export default function GratitudeFlowPage() {
         reflectionText,
         aiAssistance: aiOutput,
       };
-      // Save to Firestore, saveReflectionToFirestore now returns the full entry with ID and server timestamp
       const savedEntry = await saveReflectionToFirestore(user.uid, newEntryData);
       if (savedEntry) {
         setReflections(prevEntries => [savedEntry, ...prevEntries]);
@@ -115,8 +119,6 @@ export default function GratitudeFlowPage() {
   }
   
   if (!user && !authLoading) {
-     // This case should ideally be handled by the redirect in useEffect,
-     // but as a fallback or if router hasn't pushed yet.
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
         <p className="mt-4 text-lg text-muted-foreground">Redirecting to login...</p>
@@ -130,7 +132,7 @@ export default function GratitudeFlowPage() {
       <div className="w-full max-w-2xl space-y-8">
         <div className="flex justify-between items-center">
           <GratitudeFlowHeader />
-          <Button variant="outline" onClick={signOut} disabled={isLoading}>
+          <Button variant="outline" onClick={signOut} disabled={isLoading || isFetchingData}>
             <LogOut className="mr-2 h-4 w-4" /> Logout
           </Button>
         </div>

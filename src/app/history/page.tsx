@@ -7,18 +7,20 @@ import { ReflectionLog } from '@/components/ReflectionLog';
 import { getReflectionsFromFirestore } from '@/lib/firestoreService';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Home, ArrowDownCircle, ScrollText, LogOut, Loader2 } from 'lucide-react';
+import { Home, ArrowDownCircle, ScrollText, LogOut, Loader2, Terminal } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const ITEMS_TO_LOAD = 5; // No initial items concept here, always load some
+const ITEMS_TO_LOAD = 5; 
 
 export default function HistoryPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const router = useRouter();
   const [allReflections, setAllReflections] = useState<ReflectionEntry[]>([]);
-  // const [visibleEntriesCount, setVisibleEntriesCount] = useState(ITEMS_TO_LOAD); // We'll load all initially for simplicity, can paginate later if needed
+  const [visibleEntriesCount, setVisibleEntriesCount] = useState(ITEMS_TO_LOAD);
   const [isFetchingData, setIsFetchingData] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -31,19 +33,25 @@ export default function HistoryPage() {
 
     const fetchData = async () => {
       setIsFetchingData(true);
-      const firestoreReflections = await getReflectionsFromFirestore(user.uid);
-      setAllReflections(firestoreReflections);
-      setIsFetchingData(false);
+      setError(null);
+      try {
+        const firestoreReflections = await getReflectionsFromFirestore(user.uid);
+        setAllReflections(firestoreReflections);
+      } catch (err: any) {
+        console.error("Error fetching history data:", err);
+        setError(err.message || "Failed to load your history. Please try refreshing the page.");
+      } finally {
+        setIsFetchingData(false);
+      }
     };
 
     fetchData();
   }, [user, authLoading, router]);
 
-  // For now, showing all entries. "Load More" can be re-implemented if performance becomes an issue.
-  const visibleEntries = allReflections;
-  // const loadMoreReflections = () => {
-  //   setVisibleEntriesCount(prevCount => Math.min(prevCount + ITEMS_TO_LOAD, allReflections.length));
-  // };
+  const visibleEntries = allReflections.slice(0, visibleEntriesCount);
+  const loadMoreReflections = () => {
+    setVisibleEntriesCount(prevCount => Math.min(prevCount + ITEMS_TO_LOAD, allReflections.length));
+  };
 
   if (authLoading || isFetchingData) {
     return (
@@ -78,7 +86,7 @@ export default function HistoryPage() {
               </p>
             </div>
             <div className="flex-1 flex justify-end">
-                 <Button variant="outline" onClick={signOut} className="ml-auto">
+                 <Button variant="outline" onClick={signOut} className="ml-auto" disabled={isFetchingData}>
                     <LogOut className="mr-2 h-4 w-4" /> Logout
                 </Button>
             </div>
@@ -91,29 +99,34 @@ export default function HistoryPage() {
           </Button>
         </header>
 
+        {error && (
+          <Alert variant="destructive" className="my-6">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error}
+              <Button variant="link" onClick={() => setError(null)} className="p-0 h-auto ml-2 text-destructive-foreground hover:text-destructive-foreground/80">
+                Dismiss
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <main className="mt-8">
           <ReflectionLog entries={visibleEntries} />
-          {/* {visibleEntriesCount < allReflections.length && (
+          {visibleEntriesCount < allReflections.length && (
             <div className="mt-8 text-center">
               <Button onClick={loadMoreReflections} variant="secondary" size="lg">
                 <ArrowDownCircle className="mr-2 h-5 w-5" /> Load More Reflections
               </Button>
             </div>
-          )} */}
-          {allReflections.length > 0 && /* visibleEntriesCount >= allReflections.length && */ (
+          )}
+          {allReflections.length > 0 && visibleEntriesCount >= allReflections.length && (
             <p className="mt-8 text-center text-muted-foreground">You&apos;ve reached the end of your journey.</p>
           )}
         </main>
 
         <footer className="mt-12 py-6 text-center text-muted-foreground text-sm">
-           {/* <div className="mb-4">
-            <Button asChild variant="outline">
-              <Link href="/">
-                <Home className="mr-2 h-4 w-4" />
-                Back to Reflections
-              </Link>
-            </Button>
-          </div> */}
           <p>&copy; {new Date().getFullYear()} GratitudeFlow. Keep reflecting!</p>
         </footer>
       </div>
