@@ -188,7 +188,7 @@ export default function GratitudeFlowPage() {
 
         <ReflectionLog entries={recentReflections} />
 
-        {reflections.length > MAX_RECENT_ENTRIES_ON_MAIN_PAGE && (
+        {reflections.length > 0 && (
           <div className="mt-6 text-center">
             <Button asChild variant="outline" size="lg">
               <Link href="/history">
