@@ -44,13 +44,17 @@ export async function getReflectionsFromFirestore(userId: string): Promise<Refle
 
 // Save a new reflection for a user
 export async function saveReflectionToFirestore(userId: string, entry: Omit<ReflectionEntry, 'id' | 'timestamp'>): Promise<ReflectionEntry | null> {
-  if (!userId) return null;
+  if (!userId) {
+    console.error("saveReflectionToFirestore: No userId provided.");
+    return null;
+  }
   try {
     const reflectionsPath = `users/${userId}/${REFLECTIONS_COLLECTION}`;
     const newReflectionData = {
       ...entry,
       timestamp: Timestamp.now(), // Use Firestore Timestamp for consistent server-side time
     };
+    console.log(`Attempting to save reflection for user ${userId} to path ${reflectionsPath} with data:`, newReflectionData);
     const docRef = await addDoc(collection(db, reflectionsPath), newReflectionData);
     
     // Construct the full entry to return, matching the ReflectionEntry type
@@ -60,8 +64,11 @@ export async function saveReflectionToFirestore(userId: string, entry: Omit<Refl
       reflectionText: newReflectionData.reflectionText,
       aiAssistance: newReflectionData.aiAssistance,
     };
-  } catch (error) {
-    console.error("Error saving reflection to Firestore:", error);
+  } catch (error: any) {
+    console.error("Error saving reflection to Firestore. UserID:", userId);
+    console.error("Firebase Error Code:", error.code); // Log specific Firebase error code if available
+    console.error("Firebase Error Message:", error.message); // Log specific Firebase error message
+    console.error("Full Firebase Error Object:", error); // Log the full error object for more details
     return null;
   }
 }
@@ -73,22 +80,12 @@ export async function migrateLocalStorageToFirestore(userId: string, localReflec
   const reflectionsPath = `users/${userId}/${REFLECTIONS_COLLECTION}`;
   const batch = writeBatch(db);
 
-  // Check existing reflections to avoid duplicates (optional, depends on desired behavior)
-  // For simplicity, this example assumes we're just adding them if they aren't already there by some ID.
-  // A more robust migration might check timestamps or content.
-
   localReflections.forEach(entry => {
-    // Firestore uses auto-generated IDs, so we don't reuse local storage IDs directly as doc IDs unless they are truly unique
-    // For this migration, we'll let Firestore generate new IDs for simplicity.
-    // If local entry.id was significant and unique, you might use setDoc(doc(db, reflectionsPath, entry.id), data)
-    
     const firestoreEntryData = {
       reflectionText: entry.reflectionText,
       aiAssistance: entry.aiAssistance,
-      // Convert ISO string timestamp back to Firestore Timestamp
       timestamp: Timestamp.fromDate(new Date(entry.timestamp)),
     };
-    // Create a new doc for each local entry
     const newDocRef = doc(collection(db, reflectionsPath));
     batch.set(newDocRef, firestoreEntryData);
   });
@@ -96,8 +93,6 @@ export async function migrateLocalStorageToFirestore(userId: string, localReflec
   try {
     await batch.commit();
     console.log(`Migrated ${localReflections.length} entries to Firestore for user ${userId}.`);
-    // Optionally clear local storage after successful migration
-    // localStorage.removeItem('gratitudeFlowReflections');
   } catch (error) {
     console.error("Error migrating local storage to Firestore:", error);
   }
