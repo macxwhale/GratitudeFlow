@@ -11,6 +11,7 @@ import { Home, ArrowDownCircle, ScrollText, LogOut, Loader2, Terminal } from 'lu
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { EmotionalInsightsSummary } from '@/components/EmotionalInsightsSummary'; // Added import
 
 const ITEMS_TO_LOAD = 5;
 
@@ -124,6 +125,11 @@ export default function HistoryPage() {
         )}
 
         <main className="mt-8">
+          {/* Added EmotionalInsightsSummary component here */}
+          {!isFetchingData && allReflections.length > 0 && (
+             <EmotionalInsightsSummary entries={allReflections} />
+          )}
+
           <ReflectionLog entries={visibleEntries} />
           {visibleEntriesCount < allReflections.length && (
             <div className="mt-8 text-center">
@@ -135,6 +141,11 @@ export default function HistoryPage() {
           {allReflections.length > 0 && visibleEntriesCount >= allReflections.length && (
             <p className="mt-8 text-center text-muted-foreground">You&apos;ve reached the end of your journey.</p>
           )}
+           {allReflections.length === 0 && !isFetchingData && !error && (
+            <div className="mt-10 text-center p-8 border-2 border-dashed border-muted-foreground/30 rounded-lg bg-muted/50">
+                <p className="text-lg text-muted-foreground">No reflections found yet. Start your journey on the main page!</p>
+            </div>
+           )}
         </main>
 
         <footer className="mt-12 py-6 text-center text-muted-foreground text-sm">
