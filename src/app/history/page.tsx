@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ReflectionEntry } from '@/types';
 import { ReflectionLog } from '@/components/ReflectionLog';
 import { getReflectionsFromFirestore } from '@/lib/firestoreService';
@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const ITEMS_TO_LOAD = 5; 
+const ITEMS_TO_LOAD = 5;
 
 export default function HistoryPage() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -21,20 +21,31 @@ export default function HistoryPage() {
   const [visibleEntriesCount, setVisibleEntriesCount] = useState(ITEMS_TO_LOAD);
   const [isFetchingData, setIsFetchingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchingRef = useRef(false); // Ref to prevent re-entrant fetching
 
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading) {
+        setIsFetchingData(true);
+        fetchingRef.current = false;
+        return;
+    }
 
     if (!user) {
       router.push('/login');
       return;
     }
 
+    if (fetchingRef.current) return;
+
     const fetchData = async () => {
+      fetchingRef.current = true;
       setIsFetchingData(true);
       setError(null);
       try {
+        if (!user.uid) {
+            throw new Error("User ID is not available for fetching history data.");
+        }
         const firestoreReflections = await getReflectionsFromFirestore(user.uid);
         setAllReflections(firestoreReflections);
       } catch (err: any) {
@@ -61,7 +72,7 @@ export default function HistoryPage() {
       </div>
     );
   }
-  
+
   if (!user && !authLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">

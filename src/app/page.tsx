@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { ReflectionEntry } from '@/types';
 import { generateGratitudeMessages } from '@/ai/flows/generate-gratitude-messages';
 import type { GenerateGratitudeMessagesInput, GenerateGratitudeMessagesOutput } from '@/ai/flows/generate-gratitude-messages';
@@ -31,30 +31,43 @@ export default function GratitudeFlowPage() {
   const [isLoading, setIsLoading] = useState(false); // For AI generation
   const [isFetchingData, setIsFetchingData] = useState(true); // For fetching reflections
   const [error, setError] = useState<string | null>(null);
+  const fetchingRef = useRef(false); // Ref to prevent re-entrant fetching
 
   const attemptMigration = useCallback(async (userId: string) => {
     const localReflections = getReflectionsFromLocalStorage();
     if (localReflections.length > 0) {
       console.log("Found local reflections, attempting migration...");
       await migrateLocalStorageToFirestore(userId, localReflections);
-      saveReflectionsToLocalStorage([]); 
+      saveReflectionsToLocalStorage([]);
       console.log("Local storage cleared after migration attempt.");
     }
   }, []);
 
   useEffect(() => {
-    if (authLoading) return; 
+    if (authLoading) {
+        // If auth is loading, ensure we reset fetching state for when it's done
+        setIsFetchingData(true); 
+        fetchingRef.current = false;
+        return;
+    }
 
     if (!user) {
       router.push('/login');
       return;
     }
 
+    // User exists, auth is done.
+    if (fetchingRef.current) return; // Already fetching or fetch has completed for this user session
+
     const fetchData = async () => {
+      fetchingRef.current = true; // Mark as fetching started
       setIsFetchingData(true);
-      setError(null); // Clear previous errors
+      setError(null);
       try {
-        await attemptMigration(user.uid); 
+        if (!user.uid) {
+            throw new Error("User ID is not available for fetching data.");
+        }
+        await attemptMigration(user.uid);
         const firestoreReflections = await getReflectionsFromFirestore(user.uid);
         setReflections(firestoreReflections);
       } catch (err: any) {
@@ -62,11 +75,14 @@ export default function GratitudeFlowPage() {
         setError(err.message || "Failed to load your journey. Please try refreshing the page.");
       } finally {
         setIsFetchingData(false);
+        // Note: fetchingRef.current remains true after the first successful fetch for the session
+        // to prevent re-fetching unless user or authLoading state changes significantly (handled by outer checks)
       }
     };
 
     fetchData();
   }, [user, authLoading, router, attemptMigration]);
+
 
   const handleAddReflection = async (reflectionText: string) => {
     if (!user) {
@@ -86,6 +102,9 @@ export default function GratitudeFlowPage() {
       const savedEntry = await saveReflectionToFirestore(user.uid, newEntryData);
       if (savedEntry) {
         setReflections(prevEntries => [savedEntry, ...prevEntries]);
+        // After adding a new reflection, we might want to reset fetchingRef
+        // if we expect streaks or calendar to auto-update from a fresh fetch.
+        // For now, we locally update reflections, which is usually sufficient.
       } else {
         throw new Error("Failed to save reflection to the database.");
       }
@@ -117,8 +136,8 @@ export default function GratitudeFlowPage() {
       </div>
     );
   }
-  
-  if (!user && !authLoading) {
+
+  if (!user && !authLoading) { // Should be caught by useEffect, but as a fallback
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
         <p className="mt-4 text-lg text-muted-foreground">Redirecting to login...</p>
@@ -136,7 +155,7 @@ export default function GratitudeFlowPage() {
             <LogOut className="mr-2 h-4 w-4" /> Logout
           </Button>
         </div>
-        
+
 
         <StreakDisplay currentStreak={streaks.currentStreak} longestStreak={streaks.longestStreak} />
 
@@ -154,7 +173,7 @@ export default function GratitudeFlowPage() {
             </AlertDescription>
           </Alert>
         )}
-        
+
         <ReflectionCalendar reflectionDates={calendarDates} />
 
         <div className="my-6">
@@ -179,7 +198,7 @@ export default function GratitudeFlowPage() {
             </Button>
           </div>
         )}
-        
+
         <footer className="mt-12 py-6 text-center text-muted-foreground text-sm">
           <p>&copy; {new Date().getFullYear()} GratitudeFlow. Cultivate positivity, one reflection at a time.</p>
         </footer>
