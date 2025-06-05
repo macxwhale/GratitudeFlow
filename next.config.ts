@@ -24,8 +24,7 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  // Enable server actions
-  serverActions: true,
+  // Enable server actions - This line is removed
 };
 
 export default nextConfig;
