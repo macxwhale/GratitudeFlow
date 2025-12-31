@@ -102,7 +102,6 @@ function GratitudeFlowContent() {
         <ReflectionCalendar reflectionDates={calendarDates} />
 
         <div className="my-6">
-          <p className="text-center text-xs text-muted-foreground mb-1">Advertisement</p>
           <AdSlot adSlotId={adsenseAdSlotId} />
         </div>
         
