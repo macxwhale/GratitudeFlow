@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { ReflectionEntry } from '@/types';
 import { generateGratitudeMessages } from '@/ai/flows/generate-gratitude-messages';
 import type { GenerateGratitudeMessagesInput, GenerateGratitudeMessagesOutput } from '@/ai/flows/generate-gratitude-messages';
@@ -24,10 +24,10 @@ import { useFirestore } from '@/firebase';
 
 const MAX_RECENT_ENTRIES_ON_MAIN_PAGE = 3;
 
-export default function GratitudeFlowPage() {
-  const { data: user, loading: authLoading, signOut } = useUser();
-  const router = useRouter();
+function GratitudeFlowContent() {
+  const { data: user, signOut } = useUser();
   const firestore = useFirestore();
+  const router = useRouter();
 
   const reflectionsQuery = useMemo(() => {
     if (!user || !firestore) return null;
@@ -41,24 +41,6 @@ export default function GratitudeFlowPage() {
 
   const [isLoading, setIsLoading] = useState(false); // For AI generation
   const [error, setError] = useState<string | null>(null);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-lg text-muted-foreground">Loading your journey...</p>
-      </div>
-    );
-  }
-
-  if (!user && !authLoading) {
-    router.push('/login');
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
-        <p className="mt-4 text-lg text-muted-foreground">Redirecting to login...</p>
-      </div>
-    );
-  }
 
   const handleAddReflection = async (reflectionText: string) => {
     if (!user || !firestore) {
@@ -153,4 +135,27 @@ export default function GratitudeFlowPage() {
       </div>
     </div>
   );
+}
+
+
+export default function GratitudeFlowPage() {
+  const { data: user, loading: authLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-lg text-muted-foreground">Loading your journey...</p>
+      </div>
+    );
+  }
+  
+  return <GratitudeFlowContent />;
 }
