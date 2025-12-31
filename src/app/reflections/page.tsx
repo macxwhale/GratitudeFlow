@@ -99,19 +99,33 @@ function ReflectionsPageContent() {
     return (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 p-4 md:p-8">
             {/* Main Content */}
-            <main className="xl:col-span-2">
+            <main className="xl:col-span-2 space-y-8">
                 <ReflectionInputForm onSubmit={handleAddReflection} isLoading={isGenerating} />
+                
+                {/* On mobile, show stats here. On desktop, they are in the aside. */}
+                <div className="space-y-8 xl:hidden">
+                    <StreakDisplay currentStreak={currentStreak} longestStreak={longestStreak} />
+                    <ReflectionCalendar reflectionDates={calendarDates} />
+                </div>
+                
                 <ReflectionLog entries={latestReflections} />
             </main>
 
-            {/* Sidebar */}
-            <aside className="xl:col-span-1 space-y-8">
+            {/* Sidebar (Desktop) */}
+            <aside className="hidden xl:block xl:col-span-1 space-y-8">
                 <StreakDisplay currentStreak={currentStreak} longestStreak={longestStreak} />
                 <ReflectionCalendar reflectionDates={calendarDates} />
                 {process.env.NEXT_PUBLIC_ADMOB_BANNER_ID && (
                     <AdMobBannerPlaceholder adUnitId={process.env.NEXT_PUBLIC_ADMOB_BANNER_ID} />
                 )}
             </aside>
+            
+            {/* Ad placeholder for mobile, if it's not already in the desktop sidebar */}
+            <div className="xl:hidden">
+                 {process.env.NEXT_PUBLIC_ADMOB_BANNER_ID && (
+                    <AdMobBannerPlaceholder adUnitId={process.env.NEXT_PUBLIC_ADMOB_BANNER_ID} />
+                )}
+            </div>
 
             {/* AI Results Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
