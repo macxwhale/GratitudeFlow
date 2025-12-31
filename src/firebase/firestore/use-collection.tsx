@@ -22,7 +22,7 @@ import { useFirestore } from '../provider';
 type QueryType<T> = Query<T> | CollectionReference<T>;
 
 function getQueryKey<T>(q: QueryType<T>) {
-  if (q instanceof CollectionReference) {
+  if (q instanceof collection) {
     return [q.path];
   }
   
