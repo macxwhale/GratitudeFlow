@@ -20,6 +20,8 @@ import { useUser, useCollection } from '@/firebase';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { AppLayout } from '@/components/AppLayout';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { NewReflectionDialog } from '@/components/NewReflectionDialog';
 
 const MAX_RECENT_ENTRIES_ON_MAIN_PAGE = 3;
 
@@ -39,6 +41,9 @@ function GratitudeFlowContent() {
 
   const [isLoading, setIsLoading] = useState(false); // For AI generation
   const [error, setError] = useState<string | null>(null);
+  const [showNewReflectionDialog, setShowNewReflectionDialog] = useState(false);
+  const [newReflectionData, setNewReflectionData] = useState<{ reflectionText: string; aiAssistance: GenerateGratitudeMessagesOutput } | null>(null);
+
 
   const handleAddReflection = async (reflectionText: string) => {
     if (!user || !firestore) {
@@ -55,7 +60,14 @@ function GratitudeFlowContent() {
         reflectionText,
         aiAssistance: aiOutput,
       };
-      await saveReflectionToFirestore(firestore, user.uid, newEntryData);
+      
+      // Save to firestore but don't wait for it to finish for UI purposes
+      saveReflectionToFirestore(firestore, user.uid, newEntryData);
+      
+      // Set data for dialog and show it
+      setNewReflectionData(newEntryData);
+      setShowNewReflectionDialog(true);
+
     } catch (e: any) {
       console.error('Error generating gratitude message or saving:', e);
       setError(e.message || 'An unexpected error occurred. Please try again.');
@@ -123,6 +135,30 @@ function GratitudeFlowContent() {
         <footer className="mt-12 py-6 text-center text-muted-foreground text-sm">
           <p>&copy; {new Date().getFullYear()} GratitudeFlow. Cultivate positivity, one reflection at a time.</p>
         </footer>
+
+        {newReflectionData && (
+          <Dialog open={showNewReflectionDialog} onOpenChange={setShowNewReflectionDialog}>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-2xl text-primary flex items-center">
+                  <BookOpen className="w-6 h-6 mr-2 shrink-0" />
+                  Your New Reflection
+                </DialogTitle>
+                <DialogDescription>
+                  Here are the insights generated from your thoughts.
+                </DialogDescription>
+              </DialogHeader>
+              <NewReflectionDialog 
+                reflectionText={newReflectionData.reflectionText} 
+                aiAssistance={newReflectionData.aiAssistance} 
+              />
+              <DialogFooter>
+                <Button onClick={() => setShowNewReflectionDialog(false)}>Close</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+
       </div>
     </div>
   );
