@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -6,17 +5,18 @@ import type { ReflectionEntry } from '@/types';
 import { ReflectionLog } from '@/components/ReflectionLog';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Home, ArrowDownCircle, ScrollText, LogOut, Loader2, Terminal } from 'lucide-react';
+import { Home, ArrowDownCircle, ScrollText, Loader2, Terminal } from 'lucide-react';
 import { useUser, useCollection } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { EmotionalInsightsSummary } from '@/components/EmotionalInsightsSummary';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
+import { AppLayout } from '@/components/AppLayout';
 
 const ITEMS_TO_LOAD = 5;
 
-export default function HistoryPage() {
+function HistoryPageContent() {
   const { data: user, loading: authLoading, signOut } = useUser();
   const router = useRouter();
   const firestore = useFirestore();
@@ -32,22 +32,9 @@ export default function HistoryPage() {
   const { data: allReflections = [], isLoading: isFetchingData, error } = useCollection<ReflectionEntry>(reflectionsQuery);
   const [visibleEntriesCount, setVisibleEntriesCount] = useState(ITEMS_TO_LOAD);
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-lg text-muted-foreground">Loading your history...</p>
-      </div>
-    );
-  }
-
   if (!user && !authLoading) {
     router.push('/login');
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
-        <p className="mt-4 text-lg text-muted-foreground">Redirecting to login...</p>
-      </div>
-    );
+    return null;
   }
 
   const visibleEntries = allReflections.slice(0, visibleEntriesCount);
@@ -57,32 +44,18 @@ export default function HistoryPage() {
 
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 md:p-8 bg-gradient-to-br from-background to-secondary/30">
+    <div className="flex flex-col items-center p-4 md:p-8">
       <div className="w-full max-w-2xl">
         <header className="py-8 text-center space-y-6">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex-1"></div> {/* Spacer */}
-            <div className="flex flex-col items-center justify-center space-y-3 flex-1">
-              <ScrollText className="w-12 h-12 text-primary" />
-              <h1 className="text-4xl font-bold tracking-tight text-primary">
-                My Full Gratitude Journey
-              </h1>
-              <p className="text-lg text-muted-foreground px-4">
-                Revisit your reflections and trace your path to positivity through time.
-              </p>
-            </div>
-            <div className="flex-1 flex justify-end">
-                 <Button variant="outline" onClick={() => signOut().then(() => router.push('/login'))} className="ml-auto" disabled={isFetchingData}>
-                    <LogOut className="mr-2 h-4 w-4" /> Logout
-                </Button>
-            </div>
+          <div className="flex flex-col items-center justify-center space-y-3">
+            <ScrollText className="w-12 h-12 text-primary" />
+            <h1 className="text-4xl font-bold tracking-tight text-primary">
+              My Full Gratitude Journey
+            </h1>
+            <p className="text-lg text-muted-foreground px-4">
+              Revisit your reflections and trace your path to positivity through time.
+            </p>
           </div>
-          <Button asChild variant="outline" size="lg">
-            <Link href="/">
-              <Home className="mr-2 h-5 w-5" />
-              Back to Reflections
-            </Link>
-          </Button>
         </header>
 
         {error && (
@@ -126,4 +99,13 @@ export default function HistoryPage() {
       </div>
     </div>
   );
+}
+
+
+export default function HistoryPage() {
+    return (
+        <AppLayout>
+            <HistoryPageContent />
+        </AppLayout>
+    )
 }

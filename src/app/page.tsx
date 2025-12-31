@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import type { ReflectionEntry } from '@/types';
 import { generateGratitudeMessages } from '@/ai/flows/generate-gratitude-messages';
 import type { GenerateGratitudeMessagesInput, GenerateGratitudeMessagesOutput } from '@/ai/flows/generate-gratitude-messages';
@@ -10,7 +9,7 @@ import { ReflectionInputForm } from '@/components/ReflectionInputForm';
 import { ReflectionLog } from '@/components/ReflectionLog';
 import { saveReflectionToFirestore } from '@/lib/firestoreService';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, BookOpen, LogOut, Loader2, UserCog } from 'lucide-react';
+import { Terminal, BookOpen, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { StreakDisplay } from '@/components/StreakDisplay';
@@ -18,16 +17,15 @@ import { ReflectionCalendar } from '@/components/ReflectionCalendar';
 import { getUniqueReflectionDates, calculateStreaks, convertDateStringsToDateObjects } from '@/lib/dateUtils';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { useUser, useCollection } from '@/firebase';
-import { useRouter } from 'next/navigation';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
+import { AppLayout } from '@/components/AppLayout';
 
 const MAX_RECENT_ENTRIES_ON_MAIN_PAGE = 3;
 
 function GratitudeFlowContent() {
-  const { data: user, signOut } = useUser();
+  const { data: user } = useUser();
   const firestore = useFirestore();
-  const router = useRouter();
 
   const reflectionsQuery = useMemo(() => {
     if (!user || !firestore) return null;
@@ -80,24 +78,10 @@ function GratitudeFlowContent() {
   const displayError = error || (firestoreError as any)?.message;
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 md:p-8 bg-gradient-to-br from-background to-secondary/30">
+    <div className="flex flex-col items-center p-4 md:p-8">
       <div className="w-full max-w-2xl space-y-8">
-        <div className="flex justify-between items-start">
-          <GratitudeFlowHeader />
-          <div className="flex items-center gap-2 mt-8">
-            <Button asChild variant="ghost" size="icon" className="h-9 w-9">
-              <Link href="/account">
-                <UserCog className="h-5 w-5" />
-                <span className="sr-only">My Account</span>
-              </Link>
-            </Button>
-            <Button variant="outline" onClick={() => signOut().then(() => router.push('/login'))} disabled={isLoading || isFetchingData}>
-              <LogOut className="mr-2 h-4 w-4" /> Logout
-            </Button>
-          </div>
-        </div>
-
-
+        <GratitudeFlowHeader />
+        
         <StreakDisplay currentStreak={streaks.currentStreak} longestStreak={streaks.longestStreak} />
 
         <ReflectionInputForm onSubmit={handleAddReflection} isLoading={isLoading} />
@@ -147,23 +131,9 @@ function GratitudeFlowContent() {
 
 
 export default function GratitudeFlowPage() {
-  const { data: user, loading: authLoading } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
-
-  if (authLoading || !user) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-lg text-muted-foreground">Loading your journey...</p>
-      </div>
-    );
-  }
-  
-  return <GratitudeFlowContent />;
+  return (
+    <AppLayout>
+      <GratitudeFlowContent />
+    </AppLayout>
+  );
 }

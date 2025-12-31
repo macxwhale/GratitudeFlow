@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, UserCog, ShieldCheck, Trash2, Home, LogOut } from 'lucide-react';
+import { Loader2, UserCog, ShieldCheck, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,30 +20,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import Link from 'next/link';
+import { AppLayout } from '@/components/AppLayout';
 
-export default function AccountPage() {
-  const { data: user, loading: authLoading, signOut } = useUser();
-  const router = useRouter();
+function AccountPageContent() {
+  const { data: user } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetStatus, setResetStatus] = useState<'success' | 'error' | null>(null);
   const { toast } = useToast();
   const auth = getAuth();
+  const router = useRouter();
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-lg text-muted-foreground">Loading account details...</p>
-      </div>
-    );
-  }
-
-  if (!user && !authLoading) {
-    router.push('/login');
-    return null;
-  }
-  
   const handlePasswordReset = async () => {
     if (!user?.email) return;
     setIsSubmitting(true);
@@ -76,7 +62,6 @@ export default function AccountPage() {
             title: "Account Deleted",
             description: "Your account and all associated data have been successfully deleted.",
         });
-        // signOut(); // No need to call this, deleteUser signs the user out.
         router.push('/login');
     } catch (error: any) {
         toast({
@@ -90,7 +75,7 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
+    <div className="flex flex-col items-center justify-center p-4">
         <Card className="w-full max-w-lg shadow-2xl">
             <CardHeader className="text-center">
                 <UserCog className="mx-auto w-12 h-12 text-primary mb-4" />
@@ -148,17 +133,16 @@ export default function AccountPage() {
                 </div>
             </CardContent>
             <CardFooter className="flex justify-between items-center mt-4">
-                 <Button asChild variant="outline">
-                    <Link href="/">
-                        <Home className="mr-2 h-4 w-4" />
-                        Back to Home
-                    </Link>
-                </Button>
-                <Button variant="ghost" onClick={() => signOut().then(() => router.push('/login'))}>
-                    <LogOut className="mr-2 h-4 w-4" /> Logout
-                </Button>
             </CardFooter>
         </Card>
     </div>
   );
+}
+
+export default function AccountPage() {
+    return (
+        <AppLayout>
+            <AccountPageContent />
+        </AppLayout>
+    )
 }

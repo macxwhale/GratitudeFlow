@@ -1,6 +1,5 @@
-
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import { GeistSans as Geist } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase/client-provider';
@@ -24,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} antialiased font-sans`}>
+      <body className={`${geistSans.variable} antialiased font-sans bg-background`}>
         <QueryProvider>
           <FirebaseClientProvider>
             {children}
