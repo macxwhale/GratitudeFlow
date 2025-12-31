@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,8 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/firebase';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { Loader2, LogIn, UserPlus, Mail, KeyRound } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const emailPasswordSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -21,8 +24,18 @@ const emailPasswordSchema = z.object({
 type EmailPasswordFormValues = z.infer<typeof emailPasswordSchema>;
 
 export default function LoginPage() {
-  const { signUpWithEmail, signInWithEmail, loading: authLoading } = useAuth();
+  const { data: user, loading: authLoading } = useUser();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const auth = getAuth();
+
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
+
 
   const formSignIn = useForm<EmailPasswordFormValues>({
     resolver: zodResolver(emailPasswordSchema),
@@ -36,19 +49,42 @@ export default function LoginPage() {
 
   const handleEmailSignIn = async (data: EmailPasswordFormValues) => {
     setIsSubmitting(true);
-    await signInWithEmail(data.email, data.password);
-    setIsSubmitting(false);
-    formSignIn.reset();
+    try {
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+      toast({ title: "Signed In!", description: "Welcome back!" });
+      router.push('/');
+    } catch (error: any) {
+      toast({ title: "Sign In Failed", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+      formSignIn.reset();
+    }
   };
 
   const handleEmailSignUp = async (data: EmailPasswordFormValues) => {
     setIsSubmitting(true);
-    await signUpWithEmail(data.email, data.password);
-    setIsSubmitting(false);
-    formSignUp.reset();
+    try {
+      await createUserWithEmailAndPassword(auth, data.email, data.password);
+      toast({ title: "Account Created!", description: "Welcome aboard!" });
+      router.push('/');
+    } catch (error: any) {
+      toast({ title: "Sign Up Failed", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+      formSignUp.reset();
+    }
   };
 
   const isLoading = authLoading || isSubmitting;
+
+  if (authLoading || user) {
+    return (
+       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-lg text-muted-foreground">Checking authentication...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">

@@ -1,15 +1,14 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import type { ReflectionEntry } from '@/types';
 import { generateGratitudeMessages } from '@/ai/flows/generate-gratitude-messages';
 import type { GenerateGratitudeMessagesInput, GenerateGratitudeMessagesOutput } from '@/ai/flows/generate-gratitude-messages';
 import { GratitudeFlowHeader } from '@/components/GratitudeFlowHeader';
 import { ReflectionInputForm } from '@/components/ReflectionInputForm';
 import { ReflectionLog } from '@/components/ReflectionLog';
-import { getReflectionsFromFirestore, saveReflectionToFirestore, migrateLocalStorageToFirestore } from '@/lib/firestoreService';
-import { getReflectionsFromStorage as getReflectionsFromLocalStorage, saveReflectionsToStorage as saveReflectionsToLocalStorage } from '@/lib/localStorage'; // Keep for potential migration
+import { saveReflectionToFirestore } from '@/lib/firestoreService';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal, BookOpen, LogOut, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,73 +17,51 @@ import { StreakDisplay } from '@/components/StreakDisplay';
 import { ReflectionCalendar } from '@/components/ReflectionCalendar';
 import { getUniqueReflectionDates, calculateStreaks, convertDateStringsToDateObjects } from '@/lib/dateUtils';
 import { AdSlot } from '@/components/ads/AdSlot';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser, useCollection } from '@/firebase';
 import { useRouter } from 'next/navigation';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 
 const MAX_RECENT_ENTRIES_ON_MAIN_PAGE = 3;
 
 export default function GratitudeFlowPage() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { data: user, loading: authLoading, signOut } = useUser();
   const router = useRouter();
-  const [reflections, setReflections] = useState<ReflectionEntry[]>([]);
+  const firestore = useFirestore();
+
+  const reflectionsQuery = useMemo(() => {
+    if (!user || !firestore) return null;
+    return query(
+      collection(firestore, `users/${user.uid}/reflections`),
+      orderBy('timestamp', 'desc')
+    );
+  }, [user, firestore]);
+
+  const { data: reflections = [], isLoading: isFetchingData, error: firestoreError } = useCollection<ReflectionEntry>(reflectionsQuery);
+
   const [isLoading, setIsLoading] = useState(false); // For AI generation
-  const [isFetchingData, setIsFetchingData] = useState(true); // For fetching reflections
   const [error, setError] = useState<string | null>(null);
-  const fetchingRef = useRef(false); // Ref to prevent re-entrant fetching
 
-  const attemptMigration = useCallback(async (userId: string) => {
-    const localReflections = getReflectionsFromLocalStorage();
-    if (localReflections.length > 0) {
-      console.log("Found local reflections, attempting migration...");
-      await migrateLocalStorageToFirestore(userId, localReflections);
-      saveReflectionsToLocalStorage([]);
-      console.log("Local storage cleared after migration attempt.");
-    }
-  }, []);
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-lg text-muted-foreground">Loading your journey...</p>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    if (authLoading) {
-        // If auth is loading, ensure we reset fetching state for when it's done
-        setIsFetchingData(true); 
-        fetchingRef.current = false;
-        return;
-    }
-
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
-    // User exists, auth is done.
-    if (fetchingRef.current) return; // Already fetching or fetch has completed for this user session
-
-    const fetchData = async () => {
-      fetchingRef.current = true; // Mark as fetching started
-      setIsFetchingData(true);
-      setError(null);
-      try {
-        if (!user.uid) {
-            throw new Error("User ID is not available for fetching data.");
-        }
-        await attemptMigration(user.uid);
-        const firestoreReflections = await getReflectionsFromFirestore(user.uid);
-        setReflections(firestoreReflections);
-      } catch (err: any) {
-        console.error("Error fetching page data:", err);
-        setError(err.message || "Failed to load your journey. Please try refreshing the page.");
-      } finally {
-        setIsFetchingData(false);
-        // Note: fetchingRef.current remains true after the first successful fetch for the session
-        // to prevent re-fetching unless user or authLoading state changes significantly (handled by outer checks)
-      }
-    };
-
-    fetchData();
-  }, [user, authLoading, router, attemptMigration]);
-
+  if (!user && !authLoading) {
+    router.push('/login');
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
+        <p className="mt-4 text-lg text-muted-foreground">Redirecting to login...</p>
+      </div>
+    );
+  }
 
   const handleAddReflection = async (reflectionText: string) => {
-    if (!user) {
+    if (!user || !firestore) {
       setError("You must be logged in to add reflections.");
       return;
     }
@@ -98,15 +75,7 @@ export default function GratitudeFlowPage() {
         reflectionText,
         aiAssistance: aiOutput,
       };
-      const savedEntry = await saveReflectionToFirestore(user.uid, newEntryData);
-      if (savedEntry) {
-        setReflections(prevEntries => [savedEntry, ...prevEntries]);
-        // After adding a new reflection, we might want to reset fetchingRef
-        // if we expect streaks or calendar to auto-update from a fresh fetch.
-        // For now, we locally update reflections, which is usually sufficient.
-      } else {
-        throw new Error("Failed to save reflection to the database.");
-      }
+      await saveReflectionToFirestore(firestore, user.uid, newEntryData);
     } catch (e: any) {
       console.error('Error generating gratitude message or saving:', e);
       setError(e.message || 'An unexpected error occurred. Please try again.');
@@ -126,30 +95,14 @@ export default function GratitudeFlowPage() {
 
   const adsenseAdSlotId = process.env.NEXT_PUBLIC_ADSENSE_AD_SLOT_ID_PAGE_BOTTOM || "YOUR_ADSENSE_AD_SLOT_ID_HERE";
 
-  if (authLoading || isFetchingData) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-lg text-muted-foreground">Loading your journey...</p>
-      </div>
-    );
-  }
-
-  if (!user && !authLoading) { // Should be caught by useEffect, but as a fallback
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/30">
-        <p className="mt-4 text-lg text-muted-foreground">Redirecting to login...</p>
-      </div>
-    );
-  }
-
+  const displayError = error || (firestoreError as any)?.message;
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 md:p-8 bg-gradient-to-br from-background to-secondary/30">
       <div className="w-full max-w-2xl space-y-8">
         <div className="flex justify-between items-center">
           <GratitudeFlowHeader />
-          <Button variant="outline" onClick={signOut} disabled={isLoading || isFetchingData}>
+          <Button variant="outline" onClick={() => signOut().then(() => router.push('/login'))} disabled={isLoading || isFetchingData}>
             <LogOut className="mr-2 h-4 w-4" /> Logout
           </Button>
         </div>
@@ -159,12 +112,12 @@ export default function GratitudeFlowPage() {
 
         <ReflectionInputForm onSubmit={handleAddReflection} isLoading={isLoading} />
 
-        {error && (
+        {displayError && (
           <Alert variant="destructive" className="mt-6">
             <Terminal className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
-              {error}
+              {displayError}
               <Button variant="link" onClick={() => setError(null)} className="p-0 h-auto ml-2 text-destructive-foreground hover:text-destructive-foreground/80">
                 Dismiss
               </Button>
@@ -178,6 +131,8 @@ export default function GratitudeFlowPage() {
           <p className="text-center text-xs text-muted-foreground mb-1">Advertisement</p>
           <AdSlot adSlotId={adsenseAdSlotId} />
         </div>
+        
+        {isFetchingData && <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />}
 
         <ReflectionLog entries={recentReflections} />
 

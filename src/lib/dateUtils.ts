@@ -1,6 +1,15 @@
 
 import type { ReflectionEntry } from '@/types';
-import { format, parseISO, differenceInCalendarDays, isToday, isYesterday, startOfDay, subDays } from 'date-fns';
+import { format, parseISO, differenceInCalendarDays, startOfDay, subDays } from 'date-fns';
+import type { Timestamp } from 'firebase/firestore';
+
+function getDateFromEntry(entry: ReflectionEntry): Date {
+    if (typeof entry.timestamp === 'string') {
+        return parseISO(entry.timestamp);
+    }
+    // It's a Firestore Timestamp
+    return entry.timestamp.toDate();
+}
 
 /**
  * Gets a set of unique dates (YYYY-MM-DD) from reflection entries.
@@ -9,7 +18,7 @@ export function getUniqueReflectionDates(reflections: ReflectionEntry[]): Set<st
   const dates = new Set<string>();
   reflections.forEach(entry => {
     try {
-      const date = format(parseISO(entry.timestamp), 'yyyy-MM-dd');
+      const date = format(getDateFromEntry(entry), 'yyyy-MM-dd');
       dates.add(date);
     } catch (error) {
       console.error("Error parsing date from entry:", entry, error);
@@ -57,8 +66,6 @@ export function calculateStreaks(reflectionDatesSet: Set<string>): { currentStre
   const today = startOfDay(new Date());
   let streakDate = today;
   
-  // If no reflection today, check if the last reflection was yesterday to start the streak count.
-  // Otherwise, the current streak is 0 unless there's a reflection today.
   if (reflectionDatesSet.has(format(streakDate, 'yyyy-MM-dd'))) {
     currentStreak = 1;
     let prevDate = subDays(streakDate, 1);
@@ -97,4 +104,3 @@ export function convertDateStringsToDateObjects(dateStrings: Set<string>): Date[
     }
   }).filter(date => date !== null) as Date[];
 }
-

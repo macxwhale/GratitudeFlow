@@ -3,7 +3,8 @@ import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from '@/contexts/AuthContext'; // Import AuthProvider
+import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { QueryProvider } from '@/components/QueryProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -24,10 +25,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} antialiased font-sans`}>
-        <AuthProvider> {/* Wrap children with AuthProvider */}
-          {children}
-          <Toaster />
-        </AuthProvider>
+        <QueryProvider>
+          <FirebaseClientProvider>
+            {children}
+            <Toaster />
+          </FirebaseClientProvider>
+        </QueryProvider>
       </body>
     </html>
   );

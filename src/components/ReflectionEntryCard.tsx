@@ -3,15 +3,21 @@ import type { ReflectionEntry } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
+import type { Timestamp } from 'firebase/firestore';
 import { MessageSquareText, HeartHandshake, Tags, Quote, Lightbulb } from 'lucide-react';
 
 interface ReflectionEntryCardProps {
   entry: ReflectionEntry;
 }
 
+function formatTimestamp(timestamp: string | Timestamp): string {
+    const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp.toDate();
+    return format(date, "MMMM d, yyyy 'at' h:mm a");
+}
+
 export function ReflectionEntryCard({ entry }: ReflectionEntryCardProps) {
-  const formattedTimestamp = format(parseISO(entry.timestamp), "MMMM d, yyyy 'at' h:mm a");
+  const formattedTimestamp = formatTimestamp(entry.timestamp);
 
   // Provide default structure for aiAssistance if it's missing or its properties are missing.
   // This makes the component resilient to older data from local storage.
