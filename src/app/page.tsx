@@ -18,7 +18,6 @@ import { StreakDisplay } from '@/components/StreakDisplay';
 import { ReflectionCalendar } from '@/components/ReflectionCalendar';
 import { getUniqueReflectionDates, calculateStreaks, convertDateStringsToDateObjects } from '@/lib/dateUtils';
 import { AdSlot } from '@/components/ads/AdSlot';
-import { AdMobBannerPlaceholder } from '@/components/ads/AdMobBannerPlaceholder';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -126,7 +125,6 @@ export default function GratitudeFlowPage() {
   }, [reflections]);
 
   const adsenseAdSlotId = process.env.NEXT_PUBLIC_ADSENSE_AD_SLOT_ID_PAGE_BOTTOM || "YOUR_ADSENSE_AD_SLOT_ID_HERE";
-  const admobAdUnitId = process.env.NEXT_PUBLIC_ADMOB_BANNER_AD_UNIT_ID || "YOUR_ADMOB_BANNER_AD_UNIT_ID_HERE";
 
   if (authLoading || isFetchingData) {
     return (
@@ -177,18 +175,13 @@ export default function GratitudeFlowPage() {
         <ReflectionCalendar reflectionDates={calendarDates} />
 
         <div className="my-6">
-          <p className="text-center text-xs text-muted-foreground mb-1">Advertisement (Web - AdSense)</p>
+          <p className="text-center text-xs text-muted-foreground mb-1">Advertisement</p>
           <AdSlot adSlotId={adsenseAdSlotId} />
-        </div>
-
-        <div className="my-6">
-           <p className="text-center text-xs text-muted-foreground mb-1">Advertisement (Mobile App - AdMob Placeholder)</p>
-          <AdMobBannerPlaceholder adUnitId={admobAdUnitId} />
         </div>
 
         <ReflectionLog entries={recentReflections} />
 
-        {reflections.length > 0 && (
+        {reflections.length > MAX_RECENT_ENTRIES_ON_MAIN_PAGE && (
           <div className="mt-6 text-center">
             <Button asChild variant="outline" size="lg">
               <Link href="/history">
