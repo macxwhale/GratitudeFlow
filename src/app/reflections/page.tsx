@@ -97,15 +97,15 @@ function ReflectionsPageContent() {
     };
     
     return (
-        <div className="flex flex-col xl:flex-row gap-8 p-4 md:p-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 p-4 md:p-8">
             {/* Main Content */}
-            <main className="flex-1 xl:w-2/3">
+            <main className="xl:col-span-2">
                 <ReflectionInputForm onSubmit={handleAddReflection} isLoading={isGenerating} />
                 <ReflectionLog entries={latestReflections} />
             </main>
 
             {/* Sidebar */}
-            <aside className="xl:w-1/3 space-y-8">
+            <aside className="xl:col-span-1 space-y-8">
                 <StreakDisplay currentStreak={currentStreak} longestStreak={longestStreak} />
                 <ReflectionCalendar reflectionDates={calendarDates} />
                 {process.env.NEXT_PUBLIC_ADMOB_BANNER_ID && (
