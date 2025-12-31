@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-}
-
 @layer base {
   :root {
     --background: 0 60% 95%; /* Pale Peach */
@@ -43,15 +39,6 @@ body {
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-
-    --sidebar-background: 0 60% 92%; /* Lighter Peach for sidebar */
-    --sidebar-foreground: 0 10% 25%;
-    --sidebar-primary: 0 80% 75%; /* Muted Coral */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 45 65% 52%; /* Soft Gold */
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 60% 85%;
-    --sidebar-ring: 0 80% 75%;
   }
 
   .dark {
@@ -88,15 +75,6 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-
-    --sidebar-background: 0 10% 12%;
-    --sidebar-foreground: 0 60% 90%;
-    --sidebar-primary: 0 80% 65%;
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 45 65% 48%;
-    --sidebar-accent-foreground: 0 60% 95%;
-    --sidebar-border: 0 10% 25%;
-    --sidebar-ring: 0 80% 65%;
   }
 }
 
@@ -106,6 +84,14 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1; /* Enable ligatures and contextual alternates for better flow */
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+/* For animating the hero blobs */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+.animation-delay-2000 {
+  animation-delay: 2s;
 }

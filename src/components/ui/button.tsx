@@ -18,6 +18,10 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // Landing Page Variants
+        landingPrimary: "bg-landing-primary text-landing-primary-foreground hover:bg-landing-primary/90 [&_svg]:transition-transform [&_svg]:group-hover:translate-x-1",
+        landingOutline: "border border-landing-border/50 bg-transparent hover:bg-landing-secondary/50 hover:text-landing-foreground",
+        landingGhost: "text-landing-foreground-muted hover:bg-landing-secondary/50 hover:text-landing-foreground",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -44,7 +48,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button"
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, className }), 'group')}
         ref={ref}
         {...props}
       />
