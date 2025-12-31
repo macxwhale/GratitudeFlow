@@ -21,7 +21,6 @@ interface AuthContextType {
   loading: boolean;
   signUpWithEmail: (email: string, pass: string) => Promise<User | null>;
   signInWithEmail: (email: string, pass: string) => Promise<User | null>;
-  signInWithGoogle: () => Promise<User | null>;
   signOut: () => Promise<void>;
 }
 
@@ -81,24 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signInWithGoogle = async (): Promise<User | null> => {
-    setLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      setUser(result.user);
-      toast({ title: "Signed In with Google!", description: "Welcome!" });
-      router.push('/');
-      return result.user;
-    } catch (error: any) {
-      console.error('Error signing in with Google:', error);
-      toast({ title: "Google Sign In Failed", description: error.message, variant: "destructive" });
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const signOut = async () => {
     setLoading(true);
     try {
@@ -119,7 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signUpWithEmail,
     signInWithEmail,
-    signInWithGoogle,
     signOut,
   };
 

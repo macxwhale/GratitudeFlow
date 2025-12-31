@@ -12,7 +12,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, LogIn, UserPlus, Mail, KeyRound } from 'lucide-react';
-import Image from 'next/image'; // For Google icon
 
 const emailPasswordSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -22,7 +21,7 @@ const emailPasswordSchema = z.object({
 type EmailPasswordFormValues = z.infer<typeof emailPasswordSchema>;
 
 export default function LoginPage() {
-  const { signUpWithEmail, signInWithEmail, signInWithGoogle, loading: authLoading } = useAuth();
+  const { signUpWithEmail, signInWithEmail, loading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formSignIn = useForm<EmailPasswordFormValues>({
@@ -47,12 +46,6 @@ export default function LoginPage() {
     await signUpWithEmail(data.email, data.password);
     setIsSubmitting(false);
     formSignUp.reset();
-  };
-
-  const handleGoogleSignIn = async () => {
-    setIsSubmitting(true);
-    await signInWithGoogle();
-    setIsSubmitting(false);
   };
 
   const isLoading = authLoading || isSubmitting;
@@ -152,30 +145,8 @@ export default function LoginPage() {
             </TabsContent>
           </Tabs>
 
-          <div className="mt-6 relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
-
-          <Button variant="outline" className="w-full mt-6" onClick={handleGoogleSignIn} disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <>
-                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                  <path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.5 512 0 401.5 0 265.5S110.5 19 244 19c70.5 0 131.5 31.5 173.5 79.5l-65.5 63.5C320.5 125.5 286 104.5 244 104.5c-67.5 0-121.5 55.5-121.5 124S176.5 352.5 244 352.5c51.5 0 93-23.5 115.5-72.5H244v-83h244c2.5 14.5 4.5 29 4.5 44.5z"></path>
-                </svg>
-                Sign in with Google
-              </>
-            )}
-          </Button>
         </CardContent>
       </Card>
     </div>
   );
 }
-
