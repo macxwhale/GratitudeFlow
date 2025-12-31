@@ -10,7 +10,7 @@ import { ReflectionInputForm } from '@/components/ReflectionInputForm';
 import { ReflectionLog } from '@/components/ReflectionLog';
 import { saveReflectionToFirestore } from '@/lib/firestoreService';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal, BookOpen, LogOut, Loader2 } from 'lucide-react';
+import { Terminal, BookOpen, LogOut, Loader2, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { StreakDisplay } from '@/components/StreakDisplay';
@@ -82,11 +82,19 @@ function GratitudeFlowContent() {
   return (
     <div className="min-h-screen flex flex-col items-center p-4 md:p-8 bg-gradient-to-br from-background to-secondary/30">
       <div className="w-full max-w-2xl space-y-8">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-start">
           <GratitudeFlowHeader />
-          <Button variant="outline" onClick={() => signOut().then(() => router.push('/login'))} disabled={isLoading || isFetchingData}>
-            <LogOut className="mr-2 h-4 w-4" /> Logout
-          </Button>
+          <div className="flex items-center gap-2 mt-8">
+            <Button asChild variant="ghost" size="icon" className="h-9 w-9">
+              <Link href="/account">
+                <UserCog className="h-5 w-5" />
+                <span className="sr-only">My Account</span>
+              </Link>
+            </Button>
+            <Button variant="outline" onClick={() => signOut().then(() => router.push('/login'))} disabled={isLoading || isFetchingData}>
+              <LogOut className="mr-2 h-4 w-4" /> Logout
+            </Button>
+          </div>
         </div>
 
 
