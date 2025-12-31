@@ -32,7 +32,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      router.push('/');
+      router.push('/reflections');
     }
   }, [user, router]);
 
@@ -52,7 +52,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
       toast({ title: "Signed In!", description: "Welcome back!" });
-      router.push('/');
+      router.push('/reflections');
     } catch (error: any) {
       toast({ title: "Sign In Failed", description: error.message, variant: "destructive" });
     } finally {
@@ -66,7 +66,7 @@ export default function LoginPage() {
     try {
       await createUserWithEmailAndPassword(auth, data.email, data.password);
       toast({ title: "Account Created!", description: "Welcome aboard!" });
-      router.push('/');
+      router.push('/reflections');
     } catch (error: any) {
       toast({ title: "Sign Up Failed", description: error.message, variant: "destructive" });
     } finally {

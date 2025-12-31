@@ -46,8 +46,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     </SidebarHeader>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild isActive={pathname === '/'} tooltip="Reflections">
-                                <Link href="/">
+                            <SidebarMenuButton asChild isActive={pathname === '/reflections'} tooltip="Reflections">
+                                <Link href="/reflections">
                                     <Sparkles />
                                     <span>Reflections</span>
                                 </Link>
