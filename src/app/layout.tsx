@@ -1,15 +1,9 @@
 import type { Metadata } from 'next';
-import { GeistSans as Geist } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { QueryProvider } from '@/components/QueryProvider';
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: 'GratitudeFlow',
@@ -23,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} antialiased font-sans bg-background`}>
+      <body className={`${GeistSans.variable} font-sans antialiased bg-background`}>
         <QueryProvider>
           <FirebaseClientProvider>
             {children}
