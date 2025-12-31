@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { ReflectionEntry } from '@/types';
 import { generateGratitudeMessages } from '@/ai/flows/generate-gratitude-messages';
 import type { GenerateGratitudeMessagesOutput } from '@/ai/flows/generate-gratitude-messages';
@@ -19,7 +19,7 @@ import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { NewReflectionDialog } from '@/components/NewReflectionDialog';
 import { AppLayout } from '@/components/AppLayout';
-import { AdMobBannerPlaceholder } from '@/components/ads/AdMobBannerPlaceholder';
+import { GratitudeFlowHeader } from '@/components/GratitudeFlowHeader';
 
 const LATEST_ENTRIES_COUNT = 5;
 
@@ -43,8 +43,8 @@ function ReflectionsPageContent() {
         return query(allReflectionsQuery, firestoreLimit(LATEST_ENTRIES_COUNT));
     }, [allReflectionsQuery]);
 
-    const { data: allReflections = [], isLoading: isLoadingAll } = useCollection<ReflectionEntry>(allReflectionsQuery);
-    const { data: latestReflections = [], isLoading: isLoadingLatest } = useCollection<ReflectionEntry>(latestReflectionsQuery);
+    const { data: allReflections = [] } = useCollection<ReflectionEntry>(allReflectionsQuery);
+    const { data: latestReflections = [] } = useCollection<ReflectionEntry>(latestReflectionsQuery);
 
     const [isGenerating, setIsGenerating] = useState(false);
     const [newReflectionToShow, setNewReflectionToShow] = useState<{ reflectionText: string; aiAssistance: GenerateGratitudeMessagesOutput } | null>(null);
@@ -97,56 +97,35 @@ function ReflectionsPageContent() {
     };
     
     return (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 p-4 md:p-8">
-            {/* Main Content */}
-            <main className="xl:col-span-2 space-y-8">
-                <ReflectionInputForm onSubmit={handleAddReflection} isLoading={isGenerating} />
-                
-                {/* On mobile, show stats here. On desktop, they are in the aside. */}
-                <div className="space-y-8 xl:hidden">
-                    <StreakDisplay currentStreak={currentStreak} longestStreak={longestStreak} />
-                    <ReflectionCalendar reflectionDates={calendarDates} />
-                </div>
-                
-                <ReflectionLog entries={latestReflections} />
-            </main>
-
-            {/* Sidebar (Desktop) */}
-            <aside className="hidden xl:block xl:col-span-1 space-y-8">
-                <StreakDisplay currentStreak={currentStreak} longestStreak={longestStreak} />
-                <ReflectionCalendar reflectionDates={calendarDates} />
-                {process.env.NEXT_PUBLIC_ADMOB_BANNER_ID && (
-                    <AdMobBannerPlaceholder adUnitId={process.env.NEXT_PUBLIC_ADMOB_BANNER_ID} />
-                )}
-            </aside>
-            
-            {/* Ad placeholder for mobile, if it's not already in the desktop sidebar */}
-            <div className="xl:hidden">
-                 {process.env.NEXT_PUBLIC_ADMOB_BANNER_ID && (
-                    <AdMobBannerPlaceholder adUnitId={process.env.NEXT_PUBLIC_ADMOB_BANNER_ID} />
-                )}
-            </div>
-
-            {/* AI Results Dialog */}
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold text-primary flex items-center">
-                            Your AI-Powered Reflection
-                        </DialogTitle>
-                        <DialogDescription>
-                            Here are the insights our AI has discovered from your words.
-                        </DialogDescription>
-                    </DialogHeader>
-                    {newReflectionToShow && (
-                        <NewReflectionDialog
-                            reflectionText={newReflectionToShow.reflectionText}
-                            aiAssistance={newReflectionToShow.aiAssistance}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
+      <div className="flex flex-col items-center p-4 md:p-8">
+        <div className="w-full max-w-2xl space-y-8">
+          <GratitudeFlowHeader />
+          <StreakDisplay currentStreak={currentStreak} longestStreak={longestStreak} />
+          <ReflectionInputForm onSubmit={handleAddReflection} isLoading={isGenerating} />
+          <ReflectionCalendar reflectionDates={calendarDates} />
+          <ReflectionLog entries={latestReflections} />
         </div>
+
+        {/* AI Results Dialog */}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-primary flex items-center">
+                Your AI-Powered Reflection
+              </DialogTitle>
+              <DialogDescription>
+                Here are the insights our AI has discovered from your words.
+              </DialogDescription>
+            </DialogHeader>
+            {newReflectionToShow && (
+              <NewReflectionDialog
+                reflectionText={newReflectionToShow.reflectionText}
+                aiAssistance={newReflectionToShow.aiAssistance}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
     );
 }
 
