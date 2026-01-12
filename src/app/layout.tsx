@@ -17,7 +17,9 @@ export const metadata: Metadata = {
   title: 'GratitudeFlow | AI-Powered Gratitude Journaling & Reflection',
   description: 'Unleash the power of gratitude with GratitudeFlow, your personal AI companion for daily reflection, positive mindset shifts, and tracking emotional well-being.',
   keywords: ['gratitude journal', 'AI journal', 'mindfulness app', 'positive affirmations', 'mental wellness', 'self-reflection', 'daily journal'],
-  authors: [{ name: 'GratitudeFlow Team' }],
+  authors: [{ name: 'GratitudeFlow Team', url: siteUrl }],
+  creator: 'GratitudeFlow Team',
+  publisher: 'GratitudeFlow Team',
   metadataBase: new URL(siteUrl),
   alternates: {
     canonical: '/',
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
     description: 'Transform your mindset with daily reflections and AI-powered insights. Start your journey to a more positive life today.',
     images: [
       {
-        url: 'https://picsum.photos/seed/og-gratitude/1200/630',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
         alt: 'GratitudeFlow App Interface',
@@ -43,8 +45,14 @@ export const metadata: Metadata = {
     creator: '@GratitudeFlowApp', // Replace with your actual Twitter handle
     title: 'GratitudeFlow | AI-Powered Gratitude & Reflection',
     description: 'Discover the power of AI-driven gratitude journaling with GratitudeFlow. Your personal companion for a happier, more mindful life.',
-    images: [`https://picsum.photos/seed/twitter-gratitude/1200/630`],
+    images: [`/twitter-image.png`],
   },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon-16x16.png',
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: `${siteUrl}/site.webmanifest`,
 };
 
 export default function RootLayout({

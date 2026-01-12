@@ -12,11 +12,11 @@ import {
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import { AppLayout } from '@/components/AppLayout';
 import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 const LandingPage = () => {
   const { data: user, loading: authLoading } = useUser();
